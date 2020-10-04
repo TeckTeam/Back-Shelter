@@ -3,6 +3,7 @@ import ssl
 import sys
 from time import sleep
 from sys import getsizeof
+import math
 
 class Client():
     def __init__(self):
@@ -11,6 +12,7 @@ class Client():
         self.user = "admin"
         self.password = "Test123"
         self.sock = None
+        self.BUFFER_SIZE = 1024
 
 
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -27,7 +29,11 @@ class Client():
         text = f.read()
         #text = text.replace(" ","|-|")
         leng = getsizeof(text)
-        self.sock.send(bytes("Header{send:"+str(leng)+":"+file+"}","utf-8"))
+
+        leng = math.floor(getsizeof(text) / self.BUFFER_SIZE)
+        rest = getsizeof(text) % self.BUFFER_SIZE
+
+        self.sock.send(bytes("Header{send:"+str(leng)+":"+str(rest)+":"+file+"}","utf-8"))
         sleep(5)
         #for l in text:
         self.sock.send(text)

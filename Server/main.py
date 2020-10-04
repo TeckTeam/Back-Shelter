@@ -14,7 +14,7 @@ class Server():
         self.storage = "./storage/"
         self.users = ["admin"]
         self.passwds = ["Test123"]
-        self.BUFFER_SIZE = 8
+        self.BUFFER_SIZE = 1024
         self.mode = True
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         self.context.load_cert_chain('./.cert/example.crt', './.cert/private.key')
@@ -182,13 +182,16 @@ class Server():
                 print("Incoming Header: ",msg)
                 msg = msg.replace("Header{", "")
                 msg = msg.replace("}", "")
-                typ,size,file =msg.split(":")
+                typ,size,rest,file =msg.split(":")
                 if typ == "send":
                     print("Reciver Mode")
-                    l = None
+                    l = sock.recv(self.BUFFER_SIZE)
                     #for r in range(int(size)):
-                    l = sock.recv(int(size))#[-2:-1]
+                    for r in range(int(size)-1):
+                        l = l + sock.recv(self.BUFFER_SIZE)#[-2:-1]
+                        #print(str(r), " of", size)
                     #l = l.replace("|-|", " ")
+                    l = l + sock.recv(int(rest))
                     print("Recived erverything")
                     sock.send(b"OK")
                     #l = l.replace(" ","|-|")
@@ -198,6 +201,7 @@ class Server():
                         pass
                     f = open("./cache/"+file,"wb")#,encoding='ascii')
                     f.write(l)
+                    #f.write(t)
                     f.close()
                     
                 elif typ == "recive":
