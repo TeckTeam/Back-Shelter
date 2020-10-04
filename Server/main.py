@@ -3,6 +3,9 @@ from _thread import start_new_thread as thread
 import os
 from time import sleep
 import ssl
+from sys import getsizeof
+import math
+
 class Server():
     #Startup
     def __init__(self):
@@ -14,7 +17,7 @@ class Server():
         self.storage = "./storage/"
         self.users = ["admin"]
         self.passwds = ["Test123"]
-        self.BUFFER_SIZE = 4096
+        self.BUFFER_SIZE = 2048
         self.mode = True
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         self.context.load_cert_chain('./.cert/example.crt', './.cert/private.key')
@@ -178,11 +181,14 @@ class Server():
                 sock = self.data_client[i]
                 msg = ""
                 while "}" not in msg:
-                    msg = msg + str(sock.recv(1))[-2:-1] # msg = "Header{send:size:file}"or"Header{recive:size:file}"
+                    msg = msg + str(sock.recv(1))[-2:-1] # msg = "Header{send:size:file}"or"Header{recive:file}"
                 print("Incoming Header: ",msg)
                 msg = msg.replace("Header{", "")
                 msg = msg.replace("}", "")
-                typ,size,rest,file =msg.split(":")
+                try:
+                    typ,size,rest,file =msg.split(":")
+                except:
+                    typ,file =msg.split(":")
                 if typ == "send":
                     print("Reciver Mode")
                     l = sock.recv(self.BUFFER_SIZE)
@@ -205,7 +211,24 @@ class Server():
                     f.close()
                     
                 elif typ == "recive":
-                    pass
+                    text = None
+                    f = open("./storage/"+file, "rb")#,encoding='ascii')
+                    text = f.read()
+                    #text = text.replace(" ","|-|")
+                    leng = getsizeof(text)
+
+                    leng = math.floor(getsizeof(text) / self.BUFFER_SIZE)
+                    rest = getsizeof(text) % self.BUFFER_SIZE
+
+                    sock.send(bytes("Header{send:"+str(leng)+":"+str(rest)+":"+file+"}","utf-8"))
+                    sleep(5)
+                    #for l in text:
+                    sock.send(text)
+                    print("Send file:",file)
+                    recv = str(sock.recv(2))[-2:-1]
+                    if recv == "OK":
+                        print("Everything was recived correctly")
+                    
 
         elif set == "controll":  #Admin Terminal
                 sock = self.controll_client[i]

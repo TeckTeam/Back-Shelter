@@ -12,7 +12,7 @@ class Client():
         self.user = "admin"
         self.password = "Test123"
         self.sock = None
-        self.BUFFER_SIZE = 4096
+        self.BUFFER_SIZE = 2048
 
 
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -43,10 +43,40 @@ class Client():
             print("Everything was recived correctly")
 
 
-    def recive(self,sock):
-        passtext = text.replace(" ","|-|")
+    def recive(self,file):
+        self.sock.send(bytes("Header{recive:"+file+"}", "utf-8"))
+        msg = ""
+        while "}" not in msg:
+            msg = msg + str(self.sock.recv(1))[-2:-1] # msg = "Header{send:size:file}"or"Header{recive:file}"
+        print("Incoming Header: ",msg)
+        msg = msg.replace("Header{", "")
+        msg = msg.replace("}", "")
+        try:
+            typ,size,rest,file =msg.split(":")
+        except:
+            typ,file =msg.split(":")
+        if typ == "send":
+            print("Reciver Mode")
+            l = self.sock.recv(self.BUFFER_SIZE)
+            #for r in range(int(size)):
+            for r in range(int(size)-1):
+               l = l + self.sock.recv(self.BUFFER_SIZE)#[-2:-1]
+                #print(str(r), " of", size)
+            #l = l.replace("|-|", " ")
+            l = l + self.sock.recv(int(rest))
+            print("Recived erverything")
+            self.sock.send(b"OK")
+            #l = l.replace(" ","|-|")
+            try:
+               os.system("rm ./storage/"+file)
+            except:
+                pass
+            f = open("./storage/"+file,"wb")#,encoding='ascii')
+            f.write(l)
+            #f.write(t)
+            f.close()
     def stop(self):
         self.sock.close()
 c = Client()
-c.send("test.jpg")
+c.recive(sys.argv[1])
 c.stop()
