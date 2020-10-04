@@ -14,7 +14,7 @@ class Server():
         self.storage = "./storage/"
         self.users = ["admin"]
         self.passwds = ["Test123"]
-        self.BUFFER_SIZE = 2048
+        self.BUFFER_SIZE = 4096
         self.mode = True
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         self.context.load_cert_chain('./.cert/example.crt', './.cert/private.key')
