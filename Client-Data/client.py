@@ -12,7 +12,7 @@ class Client():
         self.user = "admin"
         self.password = "Test123"
         self.sock = None
-        self.BUFFER_SIZE = 1024
+        self.BUFFER_SIZE = 2048
 
 
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
