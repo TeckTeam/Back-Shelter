@@ -22,7 +22,6 @@ class Client():
         
 
 
-
     def send(self,file):
         text = None
         f = open("./storage/"+file, "rb")#,encoding='ascii')
@@ -57,13 +56,18 @@ class Client():
             typ,file =msg.split(":")
         if typ == "send":
             print("Reciver Mode")
-            l = self.sock.recv(self.BUFFER_SIZE)
+            if int(size) > 0:
+
+                l = self.sock.recv(self.BUFFER_SIZE)
             #for r in range(int(size)):
-            for r in range(int(size)-1):
-               l = l + self.sock.recv(self.BUFFER_SIZE)#[-2:-1]
-                #print(str(r), " of", size)
-            #l = l.replace("|-|", " ")
-            l = l + self.sock.recv(int(rest))
+            if int(size) > 0:
+                for r in range(int(size)-1):
+                l = l + self.sock.recv(self.BUFFER_SIZE)#[-2:-1]
+                    #print(str(r), " of", size)
+                #l = l.replace("|-|", " ")
+                l = l + self.sock.recv(int(rest))
+            elif int(size) == 0:
+                l = self.sock.recv(int(rest))
             print("Recived erverything")
             self.sock.send(b"OK")
             #l = l.replace(" ","|-|")
@@ -78,5 +82,5 @@ class Client():
     def stop(self):
         self.sock.close()
 c = Client()
-c.recive(sys.argv[1])
+c.send(sys.argv[1])
 c.stop()

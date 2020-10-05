@@ -23,6 +23,7 @@ class Server():
         self.context.load_cert_chain('./.cert/example.crt', './.cert/private.key')
 
         #Clients
+        self.online = True
         self.data_client = []
         self.data_addr = []
         self.data_activ = []
@@ -31,22 +32,42 @@ class Server():
         self.controll_addr = []
         self.controll_activ = []
         self.controll_sock_d = None
+        self.dic = {}
+        f = open("./log.lst", "r")
+        for line in f:
+            try:
+                file,date = line.split(";")
+                self.dic.update({file: date})
+            except:
+                pass
+        thread(self.algo,(1,))
 
         #startup
         self.startup()
+    def algo(self, m):
+        while self.online:
+            for path, subdirs, files in os.walk("./cache/"):
+                for name in files:
+                    file = os.path.join(path, name)
+                    date = str(os.path.getmtime(file))
+                    
+                    os.system("mv "+file + " ./storage/"+name)
+                    file = file.replace("cache", "storage")
+                    self.dic.update({file: date})
+        
         
     def startup(self):
         try:
             self.start_data()
             self.start_controller()
-
-            
+            thread(self.data,(1,))
+            thread(self.controll,(1,))
         except:
             print("Service Stop")
             self.stop()
             exit()
-        thread(self.data,(1,))
-        thread(self.controll,(1,))
+        
+        
     def start_controller(self):
         self.controll_sock_d = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.controll_sock_d.bind((self.ip,self.controll_port))
@@ -60,10 +81,15 @@ class Server():
         self.data_sock = self.context.wrap_socket(self.data_sock_d, server_side=True)
         print("Data-Port: open")
     def data(self,l):
-        while True:
-            conn, addr = self.data_sock.accept()
+        while self.online:
+            t = True
+            try:
+                conn, addr = self.data_sock.accept()
+            except:
+                addr = "closed"
+                t = False
             print("Connected to", addr)
-            if len(self.data_client) == len(self.data_addr):
+            if len(self.data_client) == len(self.data_addr) and t:
                 i = len(self.data_addr)
                 self.data_client.append(conn)
                 self.data_addr.append(addr)
@@ -72,10 +98,15 @@ class Server():
             else:
                 print("Connection lost to", addr)
     def controll(self,l):
-        while True:
-            conn, addr = self.controll_sock.accept()
+        while self.online:
+            t = True
+            try:
+                conn, addr = self.controll_sock.accept()
+            except:
+                addr = "closed"
+                t = False
             print("Connected to", addr)
-            if len(self.controll_client) == len(self.controll_addr):
+            if len(self.controll_client) == len(self.controll_addr) and t:
                 i = len(self.controll_addr)
                 self.controll_client.append(conn)
                 self.controll_addr.append(addr)
@@ -191,13 +222,20 @@ class Server():
                     typ,file =msg.split(":")
                 if typ == "send":
                     print("Reciver Mode")
-                    l = sock.recv(self.BUFFER_SIZE)
+                    if int(size) > 0:
+                        l = sock.recv(self.BUFFER_SIZE)
                     #for r in range(int(size)):
-                    for r in range(int(size)-1):
-                        l = l + sock.recv(self.BUFFER_SIZE)#[-2:-1]
+                    if int(size) > 0:
+                        for r in range(int(size)-1):
+                            l = l + sock.recv(self.BUFFER_SIZE)#[-2:-1]
                         #print(str(r), " of", size)
                     #l = l.replace("|-|", " ")
-                    l = l + sock.recv(int(rest))
+                    if int(size) > 0:
+                        l = l + sock.recv(int(rest))
+                    elif int(size) == 0:
+                        l = sock.recv(int(rest))
+                    else:
+                        print("File is to small.")
                     print("Recived erverything")
                     sock.send(b"OK")
                     #l = l.replace(" ","|-|")
@@ -272,17 +310,25 @@ class Server():
             self.controll_activ[i] = False
 
     def stop(self):
+        self.online = False
         self.controll_sock.close()
         self.controll_sock_d.close()
         print("Controll-Port: closed")
         self.data_sock.close()
         self.data_sock_d.close()
         print("Data-Port: closed")
+        os.system("rm ./log.lst")
+        f = open("log.lst", "w")
+        keys = self.dic.keys()
+        print(keys)
+        for key in keys:
+            f.write(key+";"+str(self.dic[key])+"\n")
+        f.close()
 s = Server()
 try:
     while s.mode:
         pass
 except:
     pass
-s.stop
+s.stop()
 exit()
