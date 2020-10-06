@@ -260,7 +260,7 @@ class Server():
                     rest = getsizeof(text) % self.BUFFER_SIZE
 
                     sock.send(bytes("Header{send:"+str(leng)+":"+str(rest)+":"+file+"}","utf-8"))
-                    sleep(5)
+                    sleep(1)
                     #for l in text:
                     sock.send(text)
                     print("Send file:",file)
@@ -328,7 +328,7 @@ class Server():
 s = Server()
 try:
     while s.mode:
-        pass
+        sleep(10)
 except:
     pass
 s.stop()
