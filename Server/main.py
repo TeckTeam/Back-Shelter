@@ -239,18 +239,19 @@ class Server():
                     print("Recived erverything")
                     sock.send(b"OK")
                     #l = l.replace(" ","|-|")
+                    file = file.replace("cache", "storage")
                     try:
-                        os.system("rm ./cache/"+file)
+                        os.system("rm "+file)
                     except:
                         pass
-                    f = open("./cache/"+file,"wb")#,encoding='ascii')
+                    f = open(file,"wb")#,encoding='ascii')
                     f.write(l)
                     #f.write(t)
                     f.close()
                     
                 elif typ == "recive":
                     text = None
-                    f = open("./storage/"+file, "rb")#,encoding='ascii')
+                    f = open(file, "rb")#,encoding='ascii')
                     text = f.read()
                     #text = text.replace(" ","|-|")
                     leng = getsizeof(text)
