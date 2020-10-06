@@ -62,7 +62,7 @@ class Client():
             #for r in range(int(size)):
             if int(size) > 0:
                 for r in range(int(size)-1):
-                l = l + self.sock.recv(self.BUFFER_SIZE)#[-2:-1]
+                    l = l + self.sock.recv(self.BUFFER_SIZE)#[-2:-1]
                     #print(str(r), " of", size)
                 #l = l.replace("|-|", " ")
                 l = l + self.sock.recv(int(rest))
