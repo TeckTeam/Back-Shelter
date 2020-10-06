@@ -21,7 +21,7 @@ class Client():
         self.dic_s = {}
         self.dic = {}
         self.use_dic = {}
-        self.use_dic.update({key: False} for key, value in list(self.dic_s.items()))
+        self.use_dic.update({key: False} for key,  in list(self.dic_s.items()))
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         self.context.load_verify_locations('./.cert/example.crt')
         sock = socket.create_connection((self.ip, self.port))
@@ -55,7 +55,7 @@ class Client():
                             self.recive(str(key))
                         else:
                             pass
-            for key, value in list(self.use_dic.item()):
+            for key, value in list(self.use_dic.items()):
                 if value != True:
                     self.recive(str(key))
                 self.use_dic.update({key: False})
